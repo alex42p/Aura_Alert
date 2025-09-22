@@ -95,8 +95,7 @@ class _BiometricChartState extends State<BiometricChart> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                SizedBox(
-                  height: 150,
+                Expanded(
                   child: data.isEmpty
                       ? Center(child: snap.connectionState == ConnectionState.waiting ? const CircularProgressIndicator() : const Text('No data'))
                       : LineChart(

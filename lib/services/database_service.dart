@@ -24,7 +24,7 @@ class DatabaseService {
 
   Future _onCreate(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE readings (
+      CREATE TABLE IF NOT EXISTS readings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         timestamp TEXT NOT NULL,
         value REAL NOT NULL,
