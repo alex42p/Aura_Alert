@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Aura Alert',
-      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.greenAccent)),
+      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 59, 209, 246))),
       home: const DashboardPage(),
     );
   }
@@ -39,15 +39,21 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        foregroundColor: Colors.white,
+        backgroundColor: Color.fromARGB(255, 28, 88, 253),
+        iconTheme: const IconThemeData(color: Colors.white),
         title: const Text('Aura Alert Dashboard'),
         actions: [
           PopupMenuButton<String>(
+            // iconColor: Colors.black,
             onSelected: (v) {
               // handle navigation selection
             },
             itemBuilder: (ctx) => const [
-              PopupMenuItem(value: 'settings', child: Text('Settings')),
-              PopupMenuItem(value: 'sync', child: Text('Sync')),
+              PopupMenuItem(value: 'settings', child: Text('Settings')), // onTap: navigate to settings page
+              PopupMenuItem(value: 'sync', child: Text('Sync')), // onTap: run immediate data sync 
+              PopupMenuItem(value: 'pause', child: Text('Pause')), // onTap: pause data collection
+              PopupMenuItem(value: 'resume', child: Text('Resume')), // onTap: resume data collection
             ],
           )
         ],
