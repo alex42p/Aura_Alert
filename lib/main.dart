@@ -51,9 +51,9 @@ class _DashboardPageState extends State<DashboardPage> {
             },
             itemBuilder: (ctx) => const [
               PopupMenuItem(value: 'settings', child: Text('Settings')), // onTap: navigate to settings page
-              PopupMenuItem(value: 'sync', child: Text('Sync')), // onTap: run immediate data sync 
-              PopupMenuItem(value: 'pause', child: Text('Pause')), // onTap: pause data collection
-              PopupMenuItem(value: 'resume', child: Text('Resume')), // onTap: resume data collection
+              // PopupMenuItem(value: 'sync', child: Text('Sync')), // onTap: run immediate data sync 
+              PopupMenuItem(value: 'export', child: Text('Export')), // onTap: export data as CSV
+              PopupMenuItem(value: 'delete', child: Text('Delete')), // onTap: delete data
             ],
           )
         ],
