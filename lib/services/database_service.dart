@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -19,6 +21,15 @@ class DatabaseService {
   Future<Database> _initDB(String fileName) async {
     final documentsDirectory = await getApplicationDocumentsDirectory();
     final path = join(documentsDirectory.path, fileName);
+
+    final exists = await databaseExists(path);
+    if (!exists) {
+      // Copy from assets
+      ByteData data = await rootBundle.load('assets/$fileName');
+      List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+      await File(path).writeAsBytes(bytes);
+    }
+
     return await openDatabase(path, version: 1, onCreate: _onCreate);
   }
 
