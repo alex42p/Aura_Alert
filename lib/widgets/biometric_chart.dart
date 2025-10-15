@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../l10n/app_localizations.dart';
 import '../models/biometric_reading.dart';
 
 typedef ReadingsLoader = Future<List<BiometricReading>> Function(DateTime from, DateTime to);
@@ -96,8 +97,12 @@ class _BiometricChartState extends State<BiometricChart> {
                 ),
                 const SizedBox(height: 8),
                 Expanded(
-                  child: data.isEmpty
-                      ? Center(child: snap.connectionState == ConnectionState.waiting ? const CircularProgressIndicator() : const Text('No data'))
+          child: data.isEmpty
+            ? Center(
+              child: snap.connectionState == ConnectionState.waiting
+                ? const CircularProgressIndicator()
+                : Text(AppLocalizations.of(context).t('chart.no_data')),
+            )
                       : LineChart(
                           LineChartData(
                             lineBarsData: [
