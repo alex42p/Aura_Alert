@@ -53,13 +53,30 @@ Aura Alert is a Flutter application designed to visualize biometric readings suc
 	- **_toSpots(data)**: Converts readings to chart points.
 	- **build(context)**: Builds the chart UI, including title, range selector, and chart (using fl_chart).
 
+### lib/pages/settings_page.dart
+**Purpose:** Provides a user interface for changing application settings.
+
+- **SettingsPage**: A StatefulWidget that allows users to modify settings like dark mode, font size, and language.
+- **_SettingsPageState**:
+    - Manages the state of the settings UI.
+    - Uses `SettingsService` to persist settings.
+    - Includes controls for toggling dark mode, adjusting font size with a slider and text input, and selecting the app's language from a dropdown.
+
+### lib/l10n/app_localizations.dart
+**Purpose:** Handles localization and internationalization for the app.
+
+- **AppLocalizations**: A class that provides localized strings for the UI.
+    - Contains a map of translations for English, Spanish, French, and German.
+    - `t(String key)`: A method to retrieve the translated string for a given key in the current locale.
+- **_AppLocalizationsDelegate**: A `LocalizationsDelegate` for the `AppLocalizations` class.
+
 ## Program Flow (from main.dart)
 1. **App Initialization**: `main()` ensures Flutter bindings are initialized and runs `MyApp`.
 2. **Dashboard Display**: `MyApp` sets up the MaterialApp and shows `DashboardPage`.
 3. **Chart Loading**: `DashboardPage` creates three `BiometricChart` widgets, each with a loader function that queries the database for readings of a specific type.
 4. **Database Access**: The loader function in `DashboardPage` uses `DatabaseService` to query readings from the local SQLite database.
 5. **Chart Rendering**: Each `BiometricChart` fetches data for the selected range and displays it using fl_chart. If no data is available, a message or loading indicator is shown.
-6. **User Interaction**: Users can change the chart range using a dropdown, which reloads the chart data.
+6. **User Interaction**: Users can change the chart range using a dropdown, which reloads the chart data. Users can also navigate to the `SettingsPage` to change application settings.
 
 ## Notes
 - The app currently does not have a backend or external data source; all data is stored locally.
