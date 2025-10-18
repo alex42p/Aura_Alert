@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import '../services/settings_service.dart';
 import '../l10n/app_localizations.dart';
+import '../services/bluetooth_service.dart';
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+
+final BleService _bleService = BleService();
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -116,13 +120,79 @@ class _SettingsPageState extends State<SettingsPage> {
               trailing: DropdownButton<String>(
                 value: _settings.locale.languageCode,
                 items: const [
-                  DropdownMenuItem(value: 'de', child: Text('Deutsch')),
-                  DropdownMenuItem(value: 'en', child: Text('English')),
-                  DropdownMenuItem(value: 'es', child: Text('Español')),
-                  DropdownMenuItem(value: 'fr', child: Text('Français')),
+                  DropdownMenuItem(value: 'de', child: Text('Deutsch')),      // German
+                  DropdownMenuItem(value: 'en', child: Text('English')),      // English
+                  DropdownMenuItem(value: 'es', child: Text('Español')),      // Spanish
+                  DropdownMenuItem(value: 'fr', child: Text('Français')),     // French
                 ],
                 onChanged: (v) {
                   if (v != null) _settings.setLocale(Locale(v));
+                },
+              ),
+            ),
+            const Divider(),
+            ListTile(
+              title: const Text('Bluetooth Device'),
+              subtitle: Text(_bleService.connectedDeviceId ?? 'Not connected'),
+              trailing: ElevatedButton(
+                child: const Text('Choose'),
+                onPressed: () async {
+                  // open modal with device list
+                  final selected = await showModalBottomSheet<DiscoveredDevice>(
+                    context: context,
+                    isScrollControlled: true,
+                    builder: (ctx) {
+                      final discovered = <String, DiscoveredDevice>{};
+                      final scanStream = _bleService.scanForDevices();
+                      final sub = scanStream.listen((d) {
+                        discovered[d.id] = d;
+                      }, onError: (e) {
+                        debugPrint('Scan error: $e');
+                      });
+
+                      return StatefulBuilder(builder: (c, setModalState) {
+                        return SizedBox(
+                          height: 400,
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: ListView(
+                                  children: discovered.values.map((device) {
+                                    return ListTile(
+                                      title: Text(device.name.isNotEmpty ? device.name : device.id),
+                                      subtitle: Text(device.id),
+                                      onTap: () {
+                                        sub.cancel();
+                                        Navigator.of(ctx).pop(device);
+                                      },
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                              TextButton(
+                                child: const Text('Stop scan'),
+                                onPressed: () async {
+                                  await sub.cancel();
+                                  if (ctx.mounted) {
+                                    Navigator.of(ctx).pop();
+                                  }
+                                },
+                              )
+                            ],
+                          ),
+                        );
+                      });
+                    },
+                  );
+
+                  if (selected != null) {
+                    // connect to the chosen device
+                    await _bleService.connect(selected.id);
+                    setState(() {});
+                  } else {
+                    // user dismissed the sheet
+                    await _bleService.stopScan();
+                  }
                 },
               ),
             ),

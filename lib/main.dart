@@ -5,6 +5,7 @@ import 'services/settings_service.dart';
 import 'widgets/biometric_chart.dart';
 import 'pages/settings_page.dart';
 import 'l10n/app_localizations.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
@@ -95,18 +96,80 @@ class _DashboardPageState extends State<DashboardPage> {
         iconTheme: const IconThemeData(color: Colors.white),
   title: Text(AppLocalizations.of(context).t('dashboard.title')),
         actions: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+              child: IconButton(
+                icon: const Icon(Icons.add_circle_rounded, color: Colors.green),
+                tooltip: 'Add dummy data',
+                onPressed: () async {
+                  try {
+                    final count = await _db.insertDummyData(1000);
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text('Inserted $count rows')));
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (_) => const DashboardPage()),
+                    );
+                  } catch (e) {
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text('Insert failed: $e')));
+                  }
+                },
+              ),
+            ),
             PopupMenuButton<String>(
-              // iconColor: Colors.black,
-              onSelected: (v) {
+              onSelected: (v) async {
                 if (v == 'settings') {
                   Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsPage()));
+                  return;
                 }
-                // other menu items can be handled here
                 if (v == 'export') {
-                  // export data as CSV
+                  try {
+                    final path = await _db.exportToCsv();
+                    final result = await SharePlus.instance.share(
+                      ShareParams(
+                        files: [XFile(path)], 
+                        subject: 'Aura Alert Data Export', 
+                        text: 'Your scanned biometric data has been turned into a CSV file for your convenience!'
+                      ));
+
+                    if (result.status == ShareResultStatus.success && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Exported CSV to: $path')));
+                    } else if (result.status == ShareResultStatus.dismissed && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Share canceled by user.')));
+                    } else {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Sharing not available.')));
+                      }
+                    }
+
+                  } catch (e) {
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Export failed: $e')));
+                  }
+                  return;
                 }
                 if (v == 'delete') {
-                  // delete all data from database
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('Confirm delete'),
+                      content: const Text('Delete all readings from the local database? This cannot be undone.'),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+                        TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Delete')),
+                      ],
+                    ),
+                  );
+                  if (confirmed == true) {
+                    await _db.deleteAllReadings();
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('All readings deleted')));
+                    // Refresh the dashboard by rebuilding this page
+                    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const DashboardPage()));
+                  }
+                  return;
                 }
               },
               itemBuilder: (ctx) => const [
@@ -114,7 +177,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 PopupMenuItem(value: 'export', child: Text('Export')),
                 PopupMenuItem(value: 'delete', child: Text('Delete')),
               ],
-            )
+            ),
         ],
       ),
       body: Padding(
