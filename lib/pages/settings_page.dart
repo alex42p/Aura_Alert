@@ -54,10 +54,6 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // IconButton(
-            //   icon: const Icon(Icons.arrow_back),
-            //   onPressed: () => Navigator.of(context).pop(),
-            // ),
             Text(
               t.t('settings.title'),
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -68,6 +64,7 @@ class _SettingsPageState extends State<SettingsPage> {
               value: _settings.isDarkMode,
               onChanged: (v) => _settings.setDarkMode(v),
             ),
+            const Divider(),
             ListTile(
               title: Text(t.t('settings.font_size')),
               subtitle: Row(
@@ -115,6 +112,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ],
               ),
             ),
+            const Divider(),
             ListTile(
               title: Text(t.t('settings.language')),
               trailing: DropdownButton<String>(
