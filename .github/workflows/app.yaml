@@ -23,9 +23,6 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          # Pinning to a specific, known stable SDK version prevents
-          # the action from failing when it can't resolve the 'stable'
-          # channel. Update this value when you want to test a newer SDK.
           flutter-version: '3.35.6'
 
       - name: Cache pub packages
@@ -43,6 +40,9 @@ jobs:
 
       - name: Get dependencies
         run: flutter pub get
+
+      - name: Create placeholder DB 
+        run: mkdir -p assets && touch assets/aura_alert.db
 
       - name: Analyze
         run: flutter analyze --no-fatal-infos
