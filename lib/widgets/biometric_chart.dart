@@ -79,11 +79,11 @@ class _BiometricChartState extends State<BiometricChart> {
                     Text(widget.title, style: Theme.of(context).textTheme.titleLarge),
                     DropdownButton<ChartRange>(
                       value: _range,
-                      items: const [
-                        DropdownMenuItem(value: ChartRange.last24h, child: Text('24h')),
-                        DropdownMenuItem(value: ChartRange.last7d, child: Text('1w')),
-                        DropdownMenuItem(value: ChartRange.last30d, child: Text('1m')),
-                        DropdownMenuItem(value: ChartRange.all, child: Text('All')),
+                      items: [
+                        DropdownMenuItem(value: ChartRange.last24h, child: Text(AppLocalizations.of(context).t('chart.range.24h'))),
+                        DropdownMenuItem(value: ChartRange.last7d, child: Text(AppLocalizations.of(context).t('chart.range.1w'))),
+                        DropdownMenuItem(value: ChartRange.last30d, child: Text(AppLocalizations.of(context).t('chart.range.1m'))),
+                        DropdownMenuItem(value: ChartRange.all, child: Text(AppLocalizations.of(context).t('chart.range.all'))),
                       ],
                       onChanged: (v) {
                         if (v == null) return;

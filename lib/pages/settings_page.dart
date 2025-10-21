@@ -132,10 +132,10 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             const Divider(),
             ListTile(
-              title: const Text('Bluetooth Device'),
-              subtitle: Text(_bleService.connectedDeviceId ?? 'Not connected', selectionColor: Colors.redAccent),
+              title: Text(t.t('settings.bluetooth_device')),
+              subtitle: Text(_bleService.connectedDeviceId ?? t.t('settings.bluetooth_not_connected'), selectionColor: Colors.redAccent),
               trailing: ElevatedButton(
-                child: const Text('Choose'),
+                child: Text(t.t('settings.bluetooth_choose')),
                 onPressed: () async {
                   // open modal with device list
                   final selected = await showModalBottomSheet<DiscoveredDevice>(
@@ -170,7 +170,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 ),
                               ),
                               TextButton(
-                                child: const Text('Stop scan'),
+                                child: Text(t.t('settings.bluetooth_stop_scan')),
                                 onPressed: () async {
                                   await sub.cancel();
                                   if (ctx.mounted) {
