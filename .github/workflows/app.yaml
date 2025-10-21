@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: Analyze & Test on Ubuntu
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -23,7 +23,10 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 'stable'
+          # Pinning to a specific, known stable SDK version prevents
+          # the action from failing when it can't resolve the 'stable'
+          # channel. Update this value when you want to test a newer SDK.
+          flutter-version: '3.10.5'
 
       - name: Cache pub packages
         uses: actions/cache@v4
