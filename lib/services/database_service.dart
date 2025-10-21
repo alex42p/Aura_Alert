@@ -17,6 +17,9 @@ class DatabaseService {
   DatabaseService._internal();
 
   Database? _db;
+  /// When set (in tests) this Directory will be used instead of calling
+  /// getApplicationDocumentsDirectory(), which requires a platform plugin.
+  Directory? documentsDirectoryOverride;
 
   Future<Database> get database async {
     if (_db != null) return _db!;
@@ -25,8 +28,8 @@ class DatabaseService {
   }
 
   Future<Database> _initDB(String fileName) async {
-    final documentsDirectory = await getApplicationDocumentsDirectory();
-    final path = join(documentsDirectory.path, fileName);
+  final Directory documentsDirectory = documentsDirectoryOverride ?? await getApplicationDocumentsDirectory();
+  final path = join(documentsDirectory.path, fileName);
 
     if (TESTING) {
       final exists = await databaseExists(path);

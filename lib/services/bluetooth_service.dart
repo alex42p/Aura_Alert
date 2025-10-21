@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,7 +19,8 @@ class BleService {
   bool _inited = false;
   bool _persistListenerAttached = false;
 
-  final flutterReactiveBle = FlutterReactiveBle();
+  FlutterReactiveBle? _flutterReactiveBle;
+  FlutterReactiveBle get flutterReactiveBle => _flutterReactiveBle ??= FlutterReactiveBle();
   final DatabaseService _db = DatabaseService();
 
   // UUIDs are placeholders — replace with your device's service/characteristic UUIDs
@@ -37,6 +39,11 @@ class BleService {
   /// Initialize the service. Loads the last-known battery percentage from
   /// SharedPreferences and attaches a listener to persist updates.
   Future<void> init() async {
+    if (Platform.environment.containsKey('FLUTTER_TEST')) {
+    // debugPrint('Skipping BLE initialization in test mode');
+    return;
+  }
+
     if (_inited) return;
     _inited = true;
 
