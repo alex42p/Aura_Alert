@@ -43,6 +43,7 @@ dependencies:
   fl_chart: ^1.1.1
   share_plus: ^12.0.0
   flutter_reactive_ble: ^5.0.2
+  shared_preferences: ^2.1.1
 
 dev_dependencies:
   flutter_test:

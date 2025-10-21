@@ -4,7 +4,7 @@ import '../l10n/app_localizations.dart';
 import '../services/bluetooth_service.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 
-final BleService _bleService = BleService();
+final BleService _bleService = BleService.instance;
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -133,7 +133,7 @@ class _SettingsPageState extends State<SettingsPage> {
             const Divider(),
             ListTile(
               title: const Text('Bluetooth Device'),
-              subtitle: Text(_bleService.connectedDeviceId ?? 'Not connected'),
+              subtitle: Text(_bleService.connectedDeviceId ?? 'Not connected', selectionColor: Colors.redAccent),
               trailing: ElevatedButton(
                 child: const Text('Choose'),
                 onPressed: () async {

@@ -2,12 +2,22 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'database_service.dart';
 
 /// BLE Service: scans, connects, subscribes to a characteristic, receives JSON
 /// payloads from the peripheral, parses them and inserts the readings into
 /// the local database using DatabaseService.
 class BleService {
+  BleService._private();
+  static final BleService instance = BleService._private();
+
+  // Persisted key for the last known battery percentage
+  static const String _kLastBatteryKey = 'ble_last_battery';
+
+  bool _inited = false;
+  bool _persistListenerAttached = false;
+
   final flutterReactiveBle = FlutterReactiveBle();
   final DatabaseService _db = DatabaseService();
 
@@ -20,6 +30,41 @@ class BleService {
   StreamSubscription<List<int>>? _notifySub;
 
   String? connectedDeviceId;
+  /// Latest battery percentage reported by the connected device (0-100).
+  /// Null when unknown.
+  final ValueNotifier<int?> latestBattery = ValueNotifier<int?>(null);
+
+  /// Initialize the service. Loads the last-known battery percentage from
+  /// SharedPreferences and attaches a listener to persist updates.
+  Future<void> init() async {
+    if (_inited) return;
+    _inited = true;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getInt(_kLastBatteryKey);
+      if (saved != null) latestBattery.value = saved.clamp(0, 100);
+
+      if (!_persistListenerAttached) {
+        latestBattery.addListener(() async {
+          final val = latestBattery.value;
+          try {
+            final p = await SharedPreferences.getInstance();
+            if (val == null) {
+              await p.remove(_kLastBatteryKey);
+            } else {
+              await p.setInt(_kLastBatteryKey, val);
+            }
+          } catch (e) {
+            debugPrint('Failed to persist latestBattery: $e');
+          }
+        });
+        _persistListenerAttached = true;
+      }
+    } catch (e) {
+      debugPrint('BleService.init() failed to load preferences: $e');
+    }
+  }
 
   /// Start scanning for devices that advertise the given service UUID.
   Stream<DiscoveredDevice> scanForDevices() async* {
@@ -101,6 +146,15 @@ class BleService {
     }
     if (json.containsKey('o2')) {
       await insertReadings('o2', json['o2']);
+    }
+    // Battery percentage handling: update the latestBattery notifier
+    if (json.containsKey('bat')) {
+      try {
+        final batVal = (json['bat'] as num).toInt();
+        latestBattery.value = batVal.clamp(0, 100);
+      } catch (e) {
+        debugPrint('Invalid battery value: $e');
+      }
     }
   }
 }

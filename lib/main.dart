@@ -5,11 +5,16 @@ import 'services/settings_service.dart';
 import 'widgets/biometric_chart.dart';
 import 'pages/settings_page.dart';
 import 'l10n/app_localizations.dart';
+import 'services/bluetooth_service.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Load persisted settings before launching the app so initial theme/locale are correct
+  await SettingsService.instance.load();
+  // Initialize BLE service (loads last-known battery from SharedPreferences)
+  await BleService.instance.init();
   runApp(const MyApp());
 }
 
@@ -95,6 +100,19 @@ class _DashboardPageState extends State<DashboardPage> {
         backgroundColor: Color.fromARGB(255, 28, 88, 253),
         iconTheme: const IconThemeData(color: Colors.white),
   title: Text(AppLocalizations.of(context).t('dashboard.title')),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(20),
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: ValueListenableBuilder<int?>(
+              valueListenable: BleService.instance.latestBattery,
+              builder: (context, bat, _) {
+                if (bat == null) return const SizedBox.shrink();
+                return Text('Battery: $bat%', style: const TextStyle(color: Colors.white));
+              },
+            ),
+          ),
+        ),
         actions: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
