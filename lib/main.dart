@@ -9,6 +9,11 @@ import 'services/bluetooth_service.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+// TODO: Setup notification service
+// TODO: Setup backend calculation service
+// TODO: Change app icon and name
+// TODO: Design graphs so they are easier to understand
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Load persisted settings before launching the app so initial theme/locale are correct
