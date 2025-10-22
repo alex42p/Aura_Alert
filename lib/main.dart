@@ -13,6 +13,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 // TODO: Setup backend calculation service
 // TODO: Change app icon and name
 // TODO: Design graphs so they are easier to understand
+// TODO: Add "About" button to AppBar/settings to explain how the app functions
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
