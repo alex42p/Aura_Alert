@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'database_service.dart';
+import 'algorithm_service.dart';
 
 /// BLE Service: scans, connects, subscribes to a characteristic, receives JSON
 /// payloads from the peripheral, parses them and inserts the readings into
@@ -142,6 +143,12 @@ class BleService {
           'value': value,
           'type': type,
         });
+        // Update fast in-memory algorithm so we can react immediately
+        try {
+          AlgorithmService.instance.addReading(type, value.toDouble(), timestamp);
+        } catch (e) {
+          debugPrint('AlgorithmService.addReading error: $e');
+        }
       }
     }
 

@@ -35,5 +35,37 @@ void main() {
       await db.close();
       await tmp.delete(recursive: true);
     });
+
+    test('updateReadingsActivityForLast updates recent rows only', () async {
+      final db = DatabaseService();
+      final tmp = await Directory.systemTemp.createTemp('aura_test_');
+      db.documentsDirectoryOverride = tmp;
+
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+
+      await db.close();
+      await db.database;
+      await db.deleteAllReadings();
+
+      final now = DateTime.now();
+      // Insert readings: one 2 minutes ago, one 10 minutes ago
+      final dbHandle = await db.database;
+      await dbHandle.insert('readings', {'timestamp': now.subtract(const Duration(minutes: 2)).toIso8601String(), 'value': 72, 'type': 'hr'});
+      await dbHandle.insert('readings', {'timestamp': now.subtract(const Duration(minutes: 10)).toIso8601String(), 'value': 70, 'type': 'hr'});
+
+      final updated = await db.updateReadingsActivityForLast(const Duration(minutes: 5), 'driving');
+      expect(updated, 1);
+
+      final rows = await db.queryReadings(type: 'hr');
+      expect(rows.length, 2);
+      final recent = rows.where((r) => r.timestamp.isAfter(now.subtract(const Duration(minutes: 5)))).toList();
+      expect(recent.first.activity, 'driving');
+
+      // cleanup
+      await db.deleteAllReadings();
+      await db.close();
+      await tmp.delete(recursive: true);
+    });
   });
 }

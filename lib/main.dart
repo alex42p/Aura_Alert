@@ -6,11 +6,11 @@ import 'widgets/biometric_chart.dart';
 import 'pages/settings_page.dart';
 import 'l10n/app_localizations.dart';
 import 'services/bluetooth_service.dart';
+import 'services/notification_service.dart';
+import 'pages/notifications_page.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-// TODO: Setup notification service
-// TODO: Setup backend calculation service
 // TODO: Change app icon and name
 // TODO: Design graphs so they are easier to understand
 // TODO: Add "About" button to AppBar/settings to explain how the app functions
@@ -21,6 +21,8 @@ void main() async {
   await SettingsService.instance.load();
   // Initialize BLE service (loads last-known battery from SharedPreferences)
   await BleService.instance.init();
+  // Initialize notification service (local notifications + persistence)
+  await NotificationService.instance.init();
   runApp(const MyApp());
 }
 
@@ -120,6 +122,44 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ),
         actions: [
+            // test notification button (orange plus)
+            IconButton(
+              icon: const Icon(Icons.add, color: Colors.orange),
+              tooltip: 'Send test notification',
+              onPressed: () async {
+                final msg = 'Manual test notification: ${DateTime.now().toIso8601String()}';
+                await NotificationService.instance.sendNotification(msg);
+              },
+            ),
+
+            // inbox with unread badge
+            ValueListenableBuilder<int>(
+              valueListenable: NotificationService.instance.unreadCount,
+              builder: (context, unread, _) {
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.inbox, color: Colors.white),
+                      tooltip: 'Notifications',
+                      onPressed: () {
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NotificationsPage()));
+                      },
+                    ),
+                    if (unread > 0)
+                      Positioned(
+                        right: 6,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                          child: Text(unread.toString(), style: const TextStyle(color: Colors.white, fontSize: 10)),
+                        ),
+                      )
+                  ],
+                );
+              },
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
               child: IconButton(

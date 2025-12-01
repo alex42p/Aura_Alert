@@ -36,10 +36,8 @@ class DatabaseService {
       if (exists) {
         await deleteDatabase(path);
       }
-        // clear and reset DB when testing
-        ByteData data = await rootBundle.load('assets/$fileName');
-        List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-        await File(path).writeAsBytes(bytes);
+      // For testing, prefer creating a fresh DB through openDatabase so onCreate
+      // runs and we get the expected schema (avoids stale asset DB schema issues)
     } else {
       final exists = await databaseExists(path);
       if (!exists) {
@@ -50,7 +48,7 @@ class DatabaseService {
       }
     }
 
-    return await openDatabase(path, version: 1, onCreate: _onCreate);
+    return await openDatabase(path, version: 3, onCreate: _onCreate, onUpgrade: _onUpgrade);
   }
 
   Future _onCreate(Database db, int version) async {
@@ -59,14 +57,105 @@ class DatabaseService {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         timestamp TEXT NOT NULL,
         value REAL NOT NULL,
-        type TEXT NOT NULL
+        type TEXT NOT NULL,
+        activity TEXT
       )
     ''');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ts TEXT NOT NULL,
+        message TEXT NOT NULL,
+        read INTEGER DEFAULT 0
+      )
+    ''');
+  }
+
+  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Add activity column to readings if missing (safe to attempt)
+      try {
+        await db.execute('ALTER TABLE readings ADD COLUMN activity TEXT');
+      } catch (_) {}
+
+      // Ensure notifications table exists
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS notifications (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          ts TEXT NOT NULL,
+          message TEXT NOT NULL
+        )
+      ''');
+    }
+
+    if (oldVersion < 3) {
+      try {
+        await db.execute('ALTER TABLE notifications ADD COLUMN read INTEGER DEFAULT 0');
+      } catch (_) {}
+    }
   }
 
   Future<int> insertReading(BiometricReading r) async {
     final db = await database;
     return await db.insert('readings', r.toMap());
+  }
+
+  /// Insert a notification into the DB for the inbox.
+  Future<int> insertNotification(String message, {DateTime? ts, int read = 0}) async {
+    final db = await database;
+    final t = (ts ?? DateTime.now()).toIso8601String();
+    return await db.insert('notifications', {'ts': t, 'message': message, 'read': read});
+  }
+
+  /// Mark a notification as read. Returns rows affected (should be 1 for valid id)
+  Future<int> markNotificationRead(int id) async {
+    final db = await database;
+    return await db.update('notifications', {'read': 1}, where: 'id = ?', whereArgs: [id]);
+  }
+
+  /// Count unread notifications
+  Future<int> countUnreadNotifications() async {
+    final db = await database;
+    final rows = await db.rawQuery('SELECT COUNT(*) as cnt FROM notifications WHERE read = 0');
+    if (rows.isEmpty) return 0;
+    final cnt = rows.first['cnt'];
+    if (cnt is int) return cnt;
+    if (cnt is int?) return cnt ?? 0;
+    if (cnt is num) return cnt.toInt();
+    return 0;
+  }
+
+  /// Delete all notifications that are marked read. Returns number of rows deleted.
+  Future<int> deleteReadNotifications() async {
+    final db = await database;
+    return await db.delete('notifications', where: 'read = 1');
+  }
+
+  /// Return notifications ordered newest->oldest
+  Future<List<Map<String, Object?>>> queryNotifications({DateTime? from, DateTime? to}) async {
+    final db = await database;
+    final whereClauses = <String>[];
+    final whereArgs = <Object>[];
+
+    if (from != null) {
+      whereClauses.add('ts >= ?');
+      whereArgs.add(from.toIso8601String());
+    }
+    if (to != null) {
+      whereClauses.add('ts <= ?');
+      whereArgs.add(to.toIso8601String());
+    }
+
+    final where = whereClauses.isEmpty ? null : whereClauses.join(' AND ');
+    return await db.query('notifications', where: where, whereArgs: whereArgs, orderBy: 'ts DESC');
+  }
+
+  /// Update readings in the last [duration] to set the activity string.
+  /// Returns number of rows updated.
+  Future<int> updateReadingsActivityForLast(Duration duration, String activity) async {
+    final db = await database;
+    final cutoff = DateTime.now().subtract(duration).toIso8601String();
+    return await db.update('readings', {'activity': activity}, where: 'timestamp >= ?', whereArgs: [cutoff]);
   }
 
   /// Export all readings to a CSV file. Returns the file path written.
@@ -75,9 +164,9 @@ class DatabaseService {
     final rows = await db.query('readings', orderBy: 'timestamp ASC');
 
     final buffer = StringBuffer();
-    buffer.writeln('id,timestamp,value,type');
+    buffer.writeln('id,timestamp,value,type,activity');
     for (final r in rows) {
-      buffer.writeln('${r['id']},${r['timestamp']},${r['value']},${r['type']}');
+      buffer.writeln('${r['id']},${r['timestamp']},${r['value']},${r['type']},${r['activity'] ?? ''}');
     }
 
     final fname = fileName ?? 'aura_alert_export_${DateTime.now().toIso8601String().replaceAll(':', '-')}.csv';
