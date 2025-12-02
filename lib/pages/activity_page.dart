@@ -45,6 +45,10 @@ class _ActivityPageState extends State<ActivityPage> {
   Widget build(BuildContext context) {
     final msg = widget.notification['message'] as String? ?? '';
     final ts = widget.notification['ts'] as String? ?? '';
+    final tsDate = ts.isNotEmpty ? DateTime.parse(ts) : null;
+    final dateStr = tsDate != null
+      ? '${tsDate.toLocal().year.toString().padLeft(4, '0')}-${tsDate.toLocal().month.toString().padLeft(2, '0')}-${tsDate.toLocal().day.toString().padLeft(2, '0')}'
+      : '';
     return Scaffold(
       appBar: AppBar(title: const Text('Activity capture')),
       body: Padding(
@@ -54,7 +58,7 @@ class _ActivityPageState extends State<ActivityPage> {
           children: [
             Text('Notification: $msg'),
             const SizedBox(height: 8),
-            Text('Received: ${ts.isNotEmpty ? DateTime.parse(ts).toLocal().toString() : 'unknown'}'),
+            Text('Received: ${dateStr.isNotEmpty ? dateStr : 'unknown'}', style: const TextStyle(fontSize: 12)),
             const SizedBox(height: 16),
             const Text('What are you doing right now?'),
             const SizedBox(height: 8),

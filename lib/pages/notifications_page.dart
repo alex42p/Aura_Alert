@@ -57,9 +57,14 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 final ts = row['ts'] as String? ?? '';
                 final isRead = (row['read'] as int?) == 1;
                 final tsDate = ts.isNotEmpty ? DateTime.parse(ts) : null;
+                final dateStr = tsDate != null
+                    ? '${tsDate.toLocal().year.toString().padLeft(4, '0')}-${tsDate.toLocal().month.toString().padLeft(2, '0')}-${tsDate.toLocal().day.toString().padLeft(2, '0')}'
+                    : '';
                 return ListTile(
                   title: Text(msg, style: TextStyle(color: isRead ? Colors.grey : null)),
-                  subtitle: tsDate != null ? Text(tsDate.toLocal().toString(), style: TextStyle(color: isRead ? Colors.grey : null)) : null,
+                  subtitle: tsDate != null
+                      ? Text(dateStr, style: TextStyle(color: isRead ? Colors.grey : null, fontSize: 12))
+                      : null,
                   onTap: () async {
                     await Navigator.of(context).push(MaterialPageRoute(builder: (_) => ActivityPage(notification: row)));
                     // reload after activity page (activity page will mark read if saved)

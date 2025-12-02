@@ -127,7 +127,7 @@ class _DashboardPageState extends State<DashboardPage> {
               icon: const Icon(Icons.add, color: Colors.orange),
               tooltip: 'Send test notification',
               onPressed: () async {
-                final msg = 'Manual test notification: ${DateTime.now().toIso8601String()}';
+                final msg = 'Triggered test notification';
                 await NotificationService.instance.sendNotification(msg);
               },
             ),
