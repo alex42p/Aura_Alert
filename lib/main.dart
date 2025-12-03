@@ -249,24 +249,44 @@ class _DashboardPageState extends State<DashboardPage> {
         child: Column(
           children: [
             Expanded(
-              child: GridView.count(
-                crossAxisCount: 1,
-                childAspectRatio: 3,
-                mainAxisSpacing: 12,
-                children: [
-                  BiometricChart(
-                    title: AppLocalizations.of(context).t('chart.hr'),
-                    loader: (from, to) => _loader('hr', from, to),
-                  ),
-                  BiometricChart(
-                    title: AppLocalizations.of(context).t('chart.temp'),
-                    loader: (from, to) => _loader('temp', from, to),
-                  ),
-                  BiometricChart(
-                    title: AppLocalizations.of(context).t('chart.o2'),
-                    loader: (from, to) => _loader('o2', from, to),
-                  ),
-                ],
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final itemHeight = constraints.maxHeight / 3;
+                  return ListView(
+                    // We don't want internal scrolling — charts fill the screen
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.zero,
+                    children: [
+                      SizedBox(
+                        height: itemHeight,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: BiometricChart(
+                            title: AppLocalizations.of(context).t('chart.hr'),
+                            loader: (from, to) => _loader('hr', from, to),
+                          ),
+                        ),
+                      ),
+                      // SizedBox(
+                      //   height: itemHeight,
+                      //   child: Padding(
+                      //     padding: const EdgeInsets.only(bottom: 12.0),
+                      //     child: BiometricChart(
+                      //       title: AppLocalizations.of(context).t('chart.temp'),
+                      //       loader: (from, to) => _loader('temp', from, to),
+                      //     ),
+                      //   ),
+                      // ),
+                      SizedBox(
+                        height: itemHeight,
+                        child: BiometricChart(
+                          title: AppLocalizations.of(context).t('chart.o2'),
+                          loader: (from, to) => _loader('o2', from, to),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ],
