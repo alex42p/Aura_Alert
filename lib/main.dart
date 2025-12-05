@@ -1,3 +1,5 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'models/biometric_reading.dart';
 import 'services/database_service.dart';
@@ -11,11 +13,21 @@ import 'pages/notifications_page.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-// TODO: Change app icon and name
 // TODO: Add "About" button to AppBar/settings to explain how the app functions
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // If you're going to use other Firebase services in the background, such as Firestore,
+  // make sure you call `initializeApp` before using other Firebase services.
+  await Firebase.initializeApp();
+  debugPrint("Handling a background message: ${message.messageId}");
+  // Note: you can't show a local notification here, but you can handle data
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   // Load persisted settings before launching the app so initial theme/locale are correct
   await SettingsService.instance.load();
   // Initialize BLE service (loads last-known battery from SharedPreferences)
@@ -56,10 +68,13 @@ class _MyAppState extends State<MyApp> {
       seedColor: const Color.fromARGB(255, 59, 209, 246),
       brightness: brightness,
     );
-    final textTheme = ThemeData(brightness: brightness).textTheme.apply(
+    final textTheme = ThemeData(brightness: brightness)
+        .textTheme
+        .apply(
           bodyColor: _settings.isDarkMode ? Colors.white : Colors.black,
           displayColor: _settings.isDarkMode ? Colors.white : Colors.black,
-        ).copyWith(
+        )
+        .copyWith(
           bodySmall: TextStyle(fontSize: _settings.fontSize),
           bodyMedium: TextStyle(fontSize: _settings.fontSize),
           bodyLarge: TextStyle(fontSize: _settings.fontSize + 2),
@@ -67,13 +82,18 @@ class _MyAppState extends State<MyApp> {
 
     return MaterialApp(
       title: 'Aura Alert',
-      localizationsDelegates: [
+      localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [Locale('en'), Locale('es'), Locale('fr'), Locale('de')],
+      supportedLocales: const [
+        Locale('en'),
+        Locale('es'),
+        Locale('fr'),
+        Locale('de')
+      ],
       theme: ThemeData(
         colorScheme: baseScheme,
         brightness: brightness,
@@ -95,7 +115,8 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   final DatabaseService _db = DatabaseService();
 
-  Future<List<BiometricReading>> _loader(String type, DateTime from, DateTime to) async {
+  Future<List<BiometricReading>> _loader(
+      String type, DateTime from, DateTime to) async {
     return await _db.queryReadings(type: type, from: from, to: to);
   }
 
@@ -104,9 +125,9 @@ class _DashboardPageState extends State<DashboardPage> {
     return Scaffold(
       appBar: AppBar(
         foregroundColor: Colors.white,
-        backgroundColor: Color.fromARGB(255, 28, 88, 253),
+        backgroundColor: const Color.fromARGB(255, 28, 88, 253),
         iconTheme: const IconThemeData(color: Colors.white),
-  title: Text(AppLocalizations.of(context).t('dashboard.title')),
+        title: Text(AppLocalizations.of(context).t('dashboard.title')),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(20),
           child: Padding(
@@ -115,133 +136,154 @@ class _DashboardPageState extends State<DashboardPage> {
               valueListenable: BleService.instance.latestBattery,
               builder: (context, bat, _) {
                 // if (bat == null) return const SizedBox.shrink();
-                if (bat == null) return Text('Bat: --%', style: const TextStyle(color: Colors.white));
-                return Text('Bat: $bat%', style: const TextStyle(color: Colors.white));
+                if (bat == null) {
+                  return const Text('Bat: --%',
+                      style: TextStyle(color: Colors.white));
+                }
+                return Text('Bat: $bat%',
+                    style: const TextStyle(color: Colors.white));
               },
             ),
           ),
         ),
         actions: [
-            // test notification button (orange plus)
-            IconButton(
-              icon: const Icon(Icons.add, color: Colors.orange),
-              tooltip: 'Send test notification',
+          // test notification button (orange plus)
+          IconButton(
+            icon: const Icon(Icons.add, color: Colors.orange),
+            tooltip: 'Send test notification',
+            onPressed: () async {
+              final msg = 'Triggered test notification';
+              await NotificationService.instance.sendNotification(msg);
+            },
+          ),
+
+          // inbox with unread badge
+          ValueListenableBuilder<int>(
+            valueListenable: NotificationService.instance.unreadCount,
+            builder: (context, unread, _) {
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.inbox, color: Colors.white),
+                    tooltip: 'Notifications',
+                    onPressed: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => const NotificationsPage()));
+                    },
+                  ),
+                  if (unread > 0)
+                    Positioned(
+                      right: 6,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                            color: Colors.red, shape: BoxShape.circle),
+                        child: Text(unread.toString(),
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 10)),
+                      ),
+                    )
+                ],
+              );
+            },
+          ),
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+            child: IconButton(
+              icon: const Icon(Icons.add_circle_rounded, color: Colors.green),
+              tooltip: 'Add dummy data',
               onPressed: () async {
-                final msg = 'Triggered test notification';
-                await NotificationService.instance.sendNotification(msg);
-              },
-            ),
-
-            // inbox with unread badge
-            ValueListenableBuilder<int>(
-              valueListenable: NotificationService.instance.unreadCount,
-              builder: (context, unread, _) {
-                return Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.inbox, color: Colors.white),
-                      tooltip: 'Notifications',
-                      onPressed: () {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NotificationsPage()));
-                      },
-                    ),
-                    if (unread > 0)
-                      Positioned(
-                        right: 6,
-                        top: 8,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                          child: Text(unread.toString(), style: const TextStyle(color: Colors.white, fontSize: 10)),
-                        ),
-                      )
-                  ],
-                );
-              },
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
-              child: IconButton(
-                icon: const Icon(Icons.add_circle_rounded, color: Colors.green),
-                tooltip: 'Add dummy data',
-                onPressed: () async {
-                  try {
-                    final count = await _db.insertDummyData(1000);
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(SnackBar(content: Text('Inserted $count rows')));
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => const DashboardPage()),
-                    );
-                  } catch (e) {
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(SnackBar(content: Text('Insert failed: $e')));
-                  }
-                },
-              ),
-            ),
-            PopupMenuButton<String>(
-              onSelected: (v) async {
-                if (v == 'settings') {
-                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsPage()));
-                  return;
-                }
-                if (v == 'export') {
-                  try {
-                    final path = await _db.exportToCsv();
-                    final result = await SharePlus.instance.share(
-                      ShareParams(
-                        files: [XFile(path)], 
-                        subject: 'Aura Alert Data Export', 
-                        text: 'Your scanned biometric data has been turned into a CSV file for your convenience!'
-                      ));
-
-                    if (result.status == ShareResultStatus.success && context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Exported CSV to: $path')));
-                    } else if (result.status == ShareResultStatus.dismissed && context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Share canceled by user.')));
-                    } else {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Sharing not available.')));
-                      }
-                    }
-
-                  } catch (e) {
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Export failed: $e')));
-                  }
-                  return;
-                }
-                if (v == 'delete') {
-                  final confirmed = await showDialog<bool>(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: const Text('Confirm delete'),
-                      content: const Text('Delete all readings from the local database? This cannot be undone.'),
-                      actions: [
-                        TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
-                        TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Delete')),
-                      ],
-                    ),
+                try {
+                  final count = await _db.insertDummyData(1000);
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Inserted $count rows')));
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const DashboardPage()),
                   );
-                  if (confirmed == true) {
-                    await _db.deleteAllReadings();
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('All readings deleted')));
-                    // Refresh the dashboard by rebuilding this page
-                    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const DashboardPage()));
-                  }
-                  return;
+                } catch (e) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Insert failed: $e')));
                 }
               },
-              itemBuilder: (ctx) => [
-                PopupMenuItem(value: 'settings', child: Text(AppLocalizations.of(context).t('menu.settings'))),
-                PopupMenuItem(value: 'export', child: Text(AppLocalizations.of(context).t('menu.export'))),
-                PopupMenuItem(value: 'delete', child: Text(AppLocalizations.of(context).t('menu.delete'))),
-              ],
             ),
+          ),
+          PopupMenuButton<String>(
+            onSelected: (v) async {
+              if (v == 'settings') {
+                Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const SettingsPage()));
+                return;
+              }
+              if (v == 'export') {
+                try {
+                  final path = await _db.exportToCsv();
+                  final result =
+                      await SharePlus.instance.share(ShareParams(
+                          files: [XFile(path)],
+                          subject: 'Aura Alert Data Export',
+                          text:
+                              'Your scanned biometric data has been turned into a CSV file for your convenience!'));
+
+                  if (result.status == ShareResultStatus.success &&
+                      context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Exported CSV to: $path')));
+                  } else if (result.status == ShareResultStatus.dismissed &&
+                      context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Share canceled by user.')));
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Sharing not available.')));
+                    }
+                  }
+                } catch (e) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Export failed: $e')));
+                }
+                return;
+              }
+              if (v == 'delete') {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Confirm delete'),
+                    content: const Text('Delete all readings from the local database? This cannot be undone.'),
+                    actions: [
+                      TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(false),
+                          child: const Text('Cancel')),
+                      TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(true),
+                          child: const Text('Delete')),
+                    ],
+                  ),
+                );
+                if (confirmed == true) {
+                  await _db.deleteAllReadings();
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('All readings deleted')));
+                  // Refresh the dashboard by rebuilding this page
+                  Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (_) => const DashboardPage()));
+                }
+                return;
+              }
+            },
+            itemBuilder: (ctx) => const [
+              PopupMenuItem(value: 'settings', child: Text('Settings')),
+              PopupMenuItem(value: 'export', child: Text('Export')),
+              PopupMenuItem(value: 'delete', child: Text('Delete')),
+            ],
+          ),
         ],
       ),
       body: Padding(

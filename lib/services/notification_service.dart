@@ -1,7 +1,5 @@
-
-
-
 import 'dart:io';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'database_service.dart';
@@ -13,7 +11,9 @@ class NotificationService {
   static final NotificationService instance = NotificationService._private();
 
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
   bool _inited = false;
+
   /// Keep a live unread notification count for UI badges
   final ValueNotifier<int> unreadCount = ValueNotifier<int>(0);
 
@@ -31,6 +31,33 @@ class NotificationService {
       } catch (_) {}
       return;
     }
+
+    // FCM Permissions
+    await _fcm.requestPermission(
+      alert: true,
+      announcement: false,
+      badge: true,
+      carPlay: false,
+      criticalAlert: false,
+      provisional: false,
+      sound: true,
+    );
+
+    // Get FCM token
+    final token = await _fcm.getToken();
+    debugPrint('Firebase Messaging Token: $token');
+
+    // Handle foreground messages
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      debugPrint('Got a message whilst in the foreground!');
+      debugPrint('Message data: ${message.data}');
+
+      if (message.notification != null) {
+        debugPrint('Message also contained a notification: ${message.notification}');
+        sendNotification(
+            message.notification?.body ?? message.data['body'] ?? 'New Notification');
+      }
+    });
 
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = DarwinInitializationSettings();
