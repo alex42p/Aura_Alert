@@ -135,13 +135,12 @@ class _DashboardPageState extends State<DashboardPage> {
             child: ValueListenableBuilder<int?>(
               valueListenable: BleService.instance.latestBattery,
               builder: (context, bat, _) {
-                // if (bat == null) return const SizedBox.shrink();
                 if (bat == null) {
                   return const Text('Bat: --%',
-                    style: TextStyle(color: Colors.white));
+                    style: TextStyle(color: Colors.white, fontSize: 20));
                 }
                 return Text('Bat: $bat%',
-                    style: const TextStyle(color: Colors.white));
+                    style: TextStyle(color: Colors.white, fontSize: 20));
               },
             ),
           ),
