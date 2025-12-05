@@ -30,6 +30,9 @@ class AppLocalizations {
       'chart.range.1w': '1w',
       'chart.range.1m': '1m',
       'chart.range.all': 'All',
+      'menu.settings': 'Settings',
+      'menu.export': 'Export',
+      'menu.delete': 'Delete',
     },
     'es': {
       'settings.title': 'Ajustes',
@@ -51,6 +54,9 @@ class AppLocalizations {
       'chart.range.1w': '1s',
       'chart.range.1m': '1m',
       'chart.range.all': 'Todos',
+      'menu.settings': 'Ajustes',
+      'menu.export': 'Exportar',
+      'menu.delete': 'Eliminar',
     },
     'fr': {
       'settings.title': 'Paramètres',
@@ -72,6 +78,9 @@ class AppLocalizations {
       'chart.range.1w': '1s',
       'chart.range.1m': '1m',
       'chart.range.all': 'Tout',
+      'menu.settings': 'Paramètres',
+      'menu.export': 'Exporter',
+      'menu.delete': 'Supprimer',
     },
     'de': {
       'settings.title': 'Einstellungen',
@@ -93,6 +102,9 @@ class AppLocalizations {
       'chart.range.1w': '1W',
       'chart.range.1m': '1M',
       'chart.range.all': 'Alle',
+      'menu.settings': 'Einstellungen',
+      'menu.export': 'Exportieren',
+      'menu.delete': 'Löschen',
     },
   };
 

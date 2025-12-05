@@ -236,10 +236,10 @@ class _DashboardPageState extends State<DashboardPage> {
                   return;
                 }
               },
-              itemBuilder: (ctx) => const [
-                PopupMenuItem(value: 'settings', child: Text('Settings')),
-                PopupMenuItem(value: 'export', child: Text('Export')),
-                PopupMenuItem(value: 'delete', child: Text('Delete')),
+              itemBuilder: (ctx) => [
+                PopupMenuItem(value: 'settings', child: Text(AppLocalizations.of(context).t('menu.settings'))),
+                PopupMenuItem(value: 'export', child: Text(AppLocalizations.of(context).t('menu.export'))),
+                PopupMenuItem(value: 'delete', child: Text(AppLocalizations.of(context).t('menu.delete'))),
               ],
             ),
         ],
