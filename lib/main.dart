@@ -12,7 +12,6 @@ import 'package:share_plus/share_plus.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 // TODO: Change app icon and name
-// TODO: Design graphs so they are easier to understand
 // TODO: Add "About" button to AppBar/settings to explain how the app functions
 
 void main() async {
@@ -115,8 +114,9 @@ class _DashboardPageState extends State<DashboardPage> {
             child: ValueListenableBuilder<int?>(
               valueListenable: BleService.instance.latestBattery,
               builder: (context, bat, _) {
-                if (bat == null) return const SizedBox.shrink();
-                return Text('Battery: $bat%', style: const TextStyle(color: Colors.white));
+                // if (bat == null) return const SizedBox.shrink();
+                if (bat == null) return Text('Bat: --%', style: const TextStyle(color: Colors.white));
+                return Text('Bat: $bat%', style: const TextStyle(color: Colors.white));
               },
             ),
           ),
