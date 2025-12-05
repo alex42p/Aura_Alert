@@ -150,9 +150,9 @@ class _DashboardPageState extends State<DashboardPage> {
           // test notification button (orange plus)
           IconButton(
             icon: const Icon(Icons.add, color: Colors.orange),
-            tooltip: 'Send test notification',
+            tooltip: AppLocalizations.of(context).t('tooltip.send_test_notification'),
             onPressed: () async {
-              final msg = 'Triggered test notification';
+              final msg = AppLocalizations.of(context).t('notification.test_message');
               await NotificationService.instance.sendNotification(msg);
             },
           ),
@@ -166,7 +166,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.inbox, color: Colors.white),
-                    tooltip: 'Notifications',
+                    tooltip: AppLocalizations.of(context).t('tooltip.notifications'),
                     onPressed: () {
                       Navigator.of(context).push(MaterialPageRoute(
                           builder: (_) => const NotificationsPage()));
@@ -194,20 +194,20 @@ class _DashboardPageState extends State<DashboardPage> {
                 const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
             child: IconButton(
               icon: const Icon(Icons.add_circle_rounded, color: Colors.green),
-              tooltip: 'Add dummy data',
+              tooltip: AppLocalizations.of(context).t('tooltip.add_dummy'),
               onPressed: () async {
                 try {
                   final count = await _db.insertDummyData(1000);
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Inserted $count rows')));
+                      SnackBar(content: Text(AppLocalizations.of(context).t('db.inserted_rows').replaceAll('{count}', count.toString()))));
                   Navigator.of(context).pushReplacement(
                     MaterialPageRoute(builder: (_) => const DashboardPage()),
                   );
                 } catch (e) {
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Insert failed: $e')));
+                      SnackBar(content: Text(AppLocalizations.of(context).t('db.insert_failed').replaceAll('{error}', e.toString()))));
                 }
               },
             ),
@@ -225,27 +225,27 @@ class _DashboardPageState extends State<DashboardPage> {
                   final result =
                       await SharePlus.instance.share(ShareParams(
                           files: [XFile(path)],
-                          subject: 'Aura Alert Data Export',
-                          text: 'Your scanned biometric data has been turned into a CSV file for your convenience!'));
-
+                          subject: AppLocalizations.of(context).t('email.subject'),
+                          text: AppLocalizations.of(context).t('email.body')));
+                  
                   if (result.status == ShareResultStatus.success &&
                       context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Exported CSV to: $path')));
+                        SnackBar(content: Text(AppLocalizations.of(context).t('export.success').replaceAll('{path}', path))));
                   } else if (result.status == ShareResultStatus.dismissed &&
                       context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Share canceled by user.')));
+                        SnackBar(content: Text(AppLocalizations.of(context).t('export.canceled'))));
                   } else {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Sharing not available.')));
+                          SnackBar(content: Text(AppLocalizations.of(context).t('export.unavailable'))));
                     }
                   }
                 } catch (e) {
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Export failed: $e')));
+                      SnackBar(content: Text(AppLocalizations.of(context).t('export.failed').replaceAll('{error}', e.toString()))));
                 }
                 return;
               }
@@ -253,15 +253,15 @@ class _DashboardPageState extends State<DashboardPage> {
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    title: const Text('Confirm delete'),
-                    content: const Text('Delete all readings from the local database? This cannot be undone.'),
+                    title: Text(AppLocalizations.of(context).t('dialog.confirm_delete_title')),
+                    content: Text(AppLocalizations.of(context).t('dialog.confirm_delete_content')),
                     actions: [
                       TextButton(
                           onPressed: () => Navigator.of(ctx).pop(false),
-                          child: const Text('Cancel')),
+                          child: Text(AppLocalizations.of(context).t('dialog.cancel'))),
                       TextButton(
                           onPressed: () => Navigator.of(ctx).pop(true),
-                          child: const Text('Delete')),
+                          child: Text(AppLocalizations.of(context).t('dialog.delete'))),
                     ],
                   ),
                 );
@@ -269,7 +269,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   await _db.deleteAllReadings();
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('All readings deleted')));
+                      SnackBar(content: Text(AppLocalizations.of(context).t('snackbar.all_readings_deleted'))));
                   // Refresh the dashboard by rebuilding this page
                   Navigator.of(context).pushReplacement(
                       MaterialPageRoute(builder: (_) => const DashboardPage()));
@@ -308,16 +308,6 @@ class _DashboardPageState extends State<DashboardPage> {
                           ),
                         ),
                       ),
-                      // SizedBox(
-                      //   height: itemHeight,
-                      //   child: Padding(
-                      //     padding: const EdgeInsets.only(bottom: 12.0),
-                      //     child: BiometricChart(
-                      //       title: AppLocalizations.of(context).t('chart.temp'),
-                      //       loader: (from, to) => _loader('temp', from, to),
-                      //     ),
-                      //   ),
-                      // ),
                       SizedBox(
                         height: itemHeight,
                         child: BiometricChart(
