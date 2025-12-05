@@ -138,7 +138,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 // if (bat == null) return const SizedBox.shrink();
                 if (bat == null) {
                   return const Text('Bat: --%',
-                      style: TextStyle(color: Colors.white));
+                    style: TextStyle(color: Colors.white));
                 }
                 return Text('Bat: $bat%',
                     style: const TextStyle(color: Colors.white));
@@ -226,8 +226,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       await SharePlus.instance.share(ShareParams(
                           files: [XFile(path)],
                           subject: 'Aura Alert Data Export',
-                          text:
-                              'Your scanned biometric data has been turned into a CSV file for your convenience!'));
+                          text: 'Your scanned biometric data has been turned into a CSV file for your convenience!'));
 
                   if (result.status == ShareResultStatus.success &&
                       context.mounted) {
@@ -278,10 +277,10 @@ class _DashboardPageState extends State<DashboardPage> {
                 return;
               }
             },
-            itemBuilder: (ctx) => const [
-              PopupMenuItem(value: 'settings', child: Text('Settings')),
-              PopupMenuItem(value: 'export', child: Text('Export')),
-              PopupMenuItem(value: 'delete', child: Text('Delete')),
+            itemBuilder: (ctx) => [
+              PopupMenuItem(value: 'settings', child: Text(AppLocalizations.of(context).t('menu.settings'))),
+              PopupMenuItem(value: 'export', child: Text(AppLocalizations.of(context).t('menu.export'))),
+              PopupMenuItem(value: 'delete', child: Text(AppLocalizations.of(context).t('menu.delete'))),
             ],
           ),
         ],
