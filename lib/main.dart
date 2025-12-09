@@ -13,7 +13,6 @@ import 'pages/notifications_page.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-// TODO: Add "About" button to AppBar/settings to explain how the app functions
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -221,24 +220,24 @@ class _DashboardPageState extends State<DashboardPage> {
               if (v == 'export') {
                 try {
                   final path = await _db.exportToCsv();
-                  final result =
-                      await SharePlus.instance.share(ShareParams(
-                          files: [XFile(path)],
-                          subject: AppLocalizations.of(context).t('email.subject'),
-                          text: AppLocalizations.of(context).t('email.body')));
-                  
-                  if (result.status == ShareResultStatus.success &&
-                      context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(AppLocalizations.of(context).t('export.success').replaceAll('{path}', path))));
-                  } else if (result.status == ShareResultStatus.dismissed &&
-                      context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(AppLocalizations.of(context).t('export.canceled'))));
-                  } else {
-                    if (context.mounted) {
+                  if (context.mounted) {
+                    final result = await SharePlus.instance.share(ShareParams(
+                        files: [XFile(path)],
+                        subject: AppLocalizations.of(context).t('email.subject'),
+                        text: AppLocalizations.of(context).t('email.body')));
+                    if (result.status == ShareResultStatus.success &&
+                        context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(AppLocalizations.of(context).t('export.unavailable'))));
+                          SnackBar(content: Text(AppLocalizations.of(context).t('export.success').replaceAll('{path}', path))));
+                    } else if (result.status == ShareResultStatus.dismissed &&
+                        context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(AppLocalizations.of(context).t('export.canceled'))));
+                    } else {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(AppLocalizations.of(context).t('export.unavailable'))));
+                      }
                     }
                   }
                 } catch (e) {
