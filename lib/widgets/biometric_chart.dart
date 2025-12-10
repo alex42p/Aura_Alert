@@ -89,7 +89,8 @@ class _BiometricChartState extends State<BiometricChart> {
         // X axis range: use data span when available, otherwise range-based default
         double xMax = spots.isEmpty ? rangeSecondsFor(_range) : (spots.last.x - (spots.isNotEmpty ? spots.first.x : 0.0));
         if (xMax <= 0) xMax = 1.0; // avoid zero interval for single-point data
-        final double xInterval = xMax / 4.0; // 4 intervals -> 5 labels
+        // Use 3 intervals for X axis to ensure labels fit on screen
+        final double xInterval = xMax / 3.0; // 3 intervals -> 4 labels
 
         final mType = widget.measurementType ?? _inferTypeFromTitle(widget.title);
 
@@ -109,8 +110,8 @@ class _BiometricChartState extends State<BiometricChart> {
             seriesColor = Theme.of(context).colorScheme.primary;
         }
 
-        // Determine Y axis min/max
-        double minY, maxY, yInterval;
+        // Determine Y axis min/max and compute 5 evenly-spaced values
+        double minY, maxY;
         if (mType == MeasurementType.heartRate) {
           minY = 40;
           maxY = 180;
@@ -135,13 +136,12 @@ class _BiometricChartState extends State<BiometricChart> {
           }
         }
 
-        // Ensure non-zero span and compute uniform 4 intervals => 5 labels
+        // Ensure non-zero span for 5 evenly-spaced labels
         if (maxY <= minY) {
-          // add small padding if constant
           maxY = minY + 1.0;
         }
-        yInterval = (maxY - minY) / 4.0;
-        if (yInterval <= 0) yInterval = 1.0;
+        // Y axis: 4 intervals -> 5 labels (min, 25%, 50%, 75%, max)
+        final double yInterval = (maxY - minY) / 4.0;
 
         return Card(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -201,7 +201,7 @@ class _BiometricChartState extends State<BiometricChart> {
                               bottomTitles: AxisTitles(
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 28,
+                                  reservedSize: 40,
                                   interval: xInterval,
                                   getTitlesWidget: (value, meta) {
                                     final ts = DateTime.fromMillisecondsSinceEpoch(startMs.toInt() + (value * 1000).toInt()).toLocal();
@@ -211,7 +211,10 @@ class _BiometricChartState extends State<BiometricChart> {
                                     } else {
                                       label = '${ts.month}/${ts.day}';
                                     }
-                                    return Text(label, style: const TextStyle(fontSize: 14));
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 8.0),
+                                      child: Text(label, style: const TextStyle(fontSize: 12), textAlign: TextAlign.center),
+                                    );
                                   },
                                 ),
                               ),

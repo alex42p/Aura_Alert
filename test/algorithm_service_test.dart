@@ -31,6 +31,9 @@ class FakeNotifier implements NotificationService {
     unreadCount.value = 0;
     return removed;
   }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {

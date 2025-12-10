@@ -20,11 +20,11 @@ class AlgorithmService {
 
   // --- configuration ---
   Duration window = const Duration(minutes: 5);
-  Duration notificationCooldown = const Duration(minutes: 30);
+  Duration notificationCooldown = const Duration(minutes: 3);
 
-  double w1 = 0.75; // HR weight
-  double w2 = 0.15; // O2 weight
-  double w3 = 0.1; // Temp weight
+  double w1 = 0.8; // HR weight
+  double w2 = 0.2; // O2 weight
+  double w3 = 0.0; // Temp weight
 
   // normalization config (reasonable defaults; app should allow per-user config)
   double hrMax = 190.0;

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -11,8 +12,23 @@ class NotificationService {
   static final NotificationService instance = NotificationService._private();
 
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
-  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  late final FirebaseMessaging _fcm;
   bool _inited = false;
+
+  /// Random stress-related messages to send when a notification is triggered
+  final List<String> _stressMessages = [
+    'We noticed you\'re stressed. Try this breathing exercise: Breathe in for 4 counts, hold for 4, exhale for 4.',
+    'Your stress levels are rising. Take a moment to step outside and get some fresh air.',
+    'High stress detected. Consider doing some light stretching or meditation for the next 5 minutes.',
+    'We\'re sensing increased stress. Try listening to your favorite calming music or podcast.',
+    'Stress alert! Take a short walk or do some deep breathing to help you relax.',
+    'Your body is showing signs of stress. Consider taking a break and hydrating yourself.',
+  ];
+
+  /// Get a random stress-related message
+  String getRandomMessage() {
+    return _stressMessages[Random().nextInt(_stressMessages.length)];
+  }
 
   /// Keep a live unread notification count for UI badges
   final ValueNotifier<int> unreadCount = ValueNotifier<int>(0);
@@ -31,6 +47,9 @@ class NotificationService {
       } catch (_) {}
       return;
     }
+
+    // Initialize FCM (lazy load)
+    _fcm = FirebaseMessaging.instance;
 
     // FCM Permissions
     await _fcm.requestPermission(
@@ -68,11 +87,14 @@ class NotificationService {
   }
 
   /// Send a notification - persist it and show a local notification if available.
+  /// If message is empty, a random stress message will be selected.
   Future<void> sendNotification(String message) async {
+    // Use a random stress message if none provided
+    final notificationMessage = message.isEmpty ? getRandomMessage() : message;
     // Persist to inbox and update unread count
     try {
       final db = DatabaseService();
-      await db.insertNotification(message, read: 0);
+      await db.insertNotification(notificationMessage, read: 0);
       final cnt = await db.countUnreadNotifications();
       unreadCount.value = cnt;
     } catch (e, st) {
@@ -102,7 +124,7 @@ class NotificationService {
     await _plugin.show(
       DateTime.now().millisecondsSinceEpoch.remainder(100000),
       'Aura Alert',
-      message,
+      notificationMessage,
       platform,
     );
   }

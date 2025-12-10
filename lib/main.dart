@@ -144,14 +144,37 @@ class _DashboardPageState extends State<DashboardPage> {
         actions: [
           // test notification button (orange plus)
           IconButton(
-            icon: const Icon(Icons.add, color: Colors.orange),
+            icon: const Icon(Icons.add, color: Color.fromARGB(255, 28, 88, 253)),
             tooltip: AppLocalizations.of(context).t('tooltip.send_test_notification'),
             onPressed: () async {
-              final msg = AppLocalizations.of(context).t('notification.test_message');
-              await NotificationService.instance.sendNotification(msg);
+              // Send a test notification with a random stress message
+              await NotificationService.instance.sendNotification('');
             },
           ),
-
+          // insert dummy data button
+          Padding(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+                      child: IconButton(
+                        icon: const Icon(Icons.add_circle_rounded, color: Color.fromARGB(255, 28, 88, 253)),
+                        tooltip: AppLocalizations.of(context).t('tooltip.add_dummy'),
+                        onPressed: () async {
+                          try {
+                            final count = await _db.insertDummyData(1000);
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(AppLocalizations.of(context).t('db.inserted_rows').replaceAll('{count}', count.toString()))));
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(builder: (_) => const DashboardPage()),
+                            );
+                          } catch (e) {
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(AppLocalizations.of(context).t('db.insert_failed').replaceAll('{error}', e.toString()))));
+                          }
+                        },
+                      ),
+                    ),
           // inbox with unread badge
           ValueListenableBuilder<int>(
             valueListenable: NotificationService.instance.unreadCount,
@@ -184,29 +207,7 @@ class _DashboardPageState extends State<DashboardPage> {
               );
             },
           ),
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
-            child: IconButton(
-              icon: const Icon(Icons.add_circle_rounded, color: Colors.green),
-              tooltip: AppLocalizations.of(context).t('tooltip.add_dummy'),
-              onPressed: () async {
-                try {
-                  final count = await _db.insertDummyData(1000);
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(AppLocalizations.of(context).t('db.inserted_rows').replaceAll('{count}', count.toString()))));
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => const DashboardPage()),
-                  );
-                } catch (e) {
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(AppLocalizations.of(context).t('db.insert_failed').replaceAll('{error}', e.toString()))));
-                }
-              },
-            ),
-          ),
+          // overflow menu
           PopupMenuButton<String>(
             onSelected: (v) async {
               if (v == 'settings') {
@@ -222,20 +223,6 @@ class _DashboardPageState extends State<DashboardPage> {
                         files: [XFile(path)],
                         subject: AppLocalizations.of(context).t('email.subject'),
                         text: AppLocalizations.of(context).t('email.body')));
-                    // if (result.status == ShareResultStatus.success &&
-                    //     context.mounted) {
-                    //   ScaffoldMessenger.of(context).showSnackBar(
-                    //       SnackBar(content: Text(AppLocalizations.of(context).t('export.success').replaceAll('{path}', path))));
-                    // } else if (result.status == ShareResultStatus.dismissed &&
-                    //     context.mounted) {
-                    //   ScaffoldMessenger.of(context).showSnackBar(
-                    //       SnackBar(content: Text(AppLocalizations.of(context).t('export.canceled'))));
-                    // } else {
-                    //   if (context.mounted) {
-                    //     ScaffoldMessenger.of(context).showSnackBar(
-                    //         SnackBar(content: Text(AppLocalizations.of(context).t('export.unavailable'))));
-                    //   }
-                    // }
                   }
                 } catch (e) {
                   if (!context.mounted) return;
