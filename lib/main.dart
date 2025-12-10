@@ -134,13 +134,10 @@ class _DashboardPageState extends State<DashboardPage> {
             child: ValueListenableBuilder<int?>(
               valueListenable: BleService.instance.latestBattery,
               builder: (context, bat, _) {
-                if (bat == null) {
-                  return const Text('Bat: --%',
-                    style: TextStyle(color: Colors.white, fontSize: 20));
-                }
+                if (bat == null) return const SizedBox.shrink();
                 return Text('Bat: $bat%',
                     style: TextStyle(color: Colors.white, fontSize: 20));
-              },
+              }
             ),
           ),
         ),
@@ -221,24 +218,24 @@ class _DashboardPageState extends State<DashboardPage> {
                 try {
                   final path = await _db.exportToCsv();
                   if (context.mounted) {
-                    final result = await SharePlus.instance.share(ShareParams(
+                    await SharePlus.instance.share(ShareParams(
                         files: [XFile(path)],
                         subject: AppLocalizations.of(context).t('email.subject'),
                         text: AppLocalizations.of(context).t('email.body')));
-                    if (result.status == ShareResultStatus.success &&
-                        context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(AppLocalizations.of(context).t('export.success').replaceAll('{path}', path))));
-                    } else if (result.status == ShareResultStatus.dismissed &&
-                        context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(AppLocalizations.of(context).t('export.canceled'))));
-                    } else {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(AppLocalizations.of(context).t('export.unavailable'))));
-                      }
-                    }
+                    // if (result.status == ShareResultStatus.success &&
+                    //     context.mounted) {
+                    //   ScaffoldMessenger.of(context).showSnackBar(
+                    //       SnackBar(content: Text(AppLocalizations.of(context).t('export.success').replaceAll('{path}', path))));
+                    // } else if (result.status == ShareResultStatus.dismissed &&
+                    //     context.mounted) {
+                    //   ScaffoldMessenger.of(context).showSnackBar(
+                    //       SnackBar(content: Text(AppLocalizations.of(context).t('export.canceled'))));
+                    // } else {
+                    //   if (context.mounted) {
+                    //     ScaffoldMessenger.of(context).showSnackBar(
+                    //         SnackBar(content: Text(AppLocalizations.of(context).t('export.unavailable'))));
+                    //   }
+                    // }
                   }
                 } catch (e) {
                   if (!context.mounted) return;

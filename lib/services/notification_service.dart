@@ -49,7 +49,7 @@ class NotificationService {
 
     // Handle foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint('Got a message whilst in the foreground!');
+      debugPrint('Got a message while in the foreground!');
       debugPrint('Message data: ${message.data}');
 
       if (message.notification != null) {
